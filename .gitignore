@@ -1,0 +1,60 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+*.egg-info/
+.eggs/
+build/
+dist/
+pip-wheel-metadata/
+.pytest_cache/
+.coverage
+.coverage.*
+htmlcov/
+.mypy_cache/
+.pyre/
+.ruff_cache/
+.tox/
+.nox/
+.venv/
+venv/
+ENV/
+env/
+
+# Environment
+.env
+.env.*
+.envrc
+
+# IDE
+.idea/
+*.iml
+.vscode/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# LaTeX build artifacts
+docs/*.aux
+docs/*.log
+docs/*.out
+docs/*.toc
+svg-inkscape/
+docs/svg-inkscape/
+
+# Local-only files
+task.txt
+ГОСТ 7.32-2017.pdf
+ПЗ ЗЭ.docx
+Структура ПЗ РЭ 2026.pdf
+Требования.pdf
+AGENTS.md
+.serena/
+artifacts/
+data/
+docs/explanatory_note.docx
+docs/explanatory_note.pdf
+ГОСТ_7.32-2017.pdf
+Требования_ЗЭ_2025_26_ВсОШ_информатика_ИБ.pdf
