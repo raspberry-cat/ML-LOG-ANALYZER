@@ -1,0 +1,21 @@
+name: log-anomaly
+
+services:
+  api:
+    build: .
+    environment:
+      ARTIFACT_DIR: /app/artifacts
+      MODEL_TYPE: isolation_forest
+      LOG_LEVEL: INFO
+      ENVIRONMENT: production
+      AUTO_TRAIN_ON_STARTUP: "false"
+      BOOTSTRAP_LOG_PATH: /app/data/logs/bootstrap.jsonl
+      AUTO_INGEST_LOG_FILES_ON_STARTUP: "false"
+      LOG_INPUT_PATHS: '["/app/data/logs/input.jsonl"]'
+      LOG_SOURCE_FORMAT: jsonl
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./artifacts:/app/artifacts
+      - ./data:/app/data
+    restart: unless-stopped
