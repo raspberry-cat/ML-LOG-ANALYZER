@@ -4,9 +4,9 @@ import json
 from collections import Counter
 from pathlib import Path
 
-from detectors.base import IAnomalyDetector
 from core.models import AnomalyResult, LogEvent
 from core.normalization import normalize_message, normalize_path
+from detectors.base import IAnomalyDetector
 
 
 class FrequencyBaselineDetector(IAnomalyDetector):

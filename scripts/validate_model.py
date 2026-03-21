@@ -10,14 +10,13 @@ from pathlib import Path
 import numpy as np
 from sklearn.metrics import roc_auc_score, roc_curve
 
-from services.features import FeatureExtractor
-from services.parsers import LogParser
 from core.models import LogEvent
-from detectors.registry import ModelRegistry
 from core.settings import settings
+from detectors.registry import ModelRegistry
+from services.parsers import LogParser
 
 
-def main() -> None:
+def main():
     ap = argparse.ArgumentParser(description="Validate model on labeled dataset")
     ap.add_argument(
         "--input",
@@ -36,14 +35,12 @@ def main() -> None:
     if not args.input.exists():
         raise SystemExit(f"ERROR: {args.input} not found")
 
-    print("Loading model...")
     registry = ModelRegistry(settings.artifact_dir)
     detector, metadata = registry.load_latest()
     threshold = metadata.get("train_metrics", {}).get("threshold", 0.5)
-    print(f"  Model: {metadata.get('model_type')} v{metadata.get('version')}")
-    print(f"  Training threshold: {threshold:.4f}")
+    print(f"model: {metadata.get('model_type')} v{metadata.get('version')}, threshold={threshold:.4f}")
 
-    print(f"Reading {args.input} ...")
+    print(f"reading {args.input}")
     parser = LogParser(
         source_format=settings.log_source_format,
         json_field_mapping=settings.log_field_mapping,
@@ -68,18 +65,18 @@ def main() -> None:
             except Exception as e:
                 skipped += 1
                 if skipped <= 5:
-                    print(f"  WARN: line {line_no}: {e}")
+                    print(f"WARN: line {line_no}: {e}")
 
     n_total = len(events)
     n_clean = sum(1 for lb in labels if lb == "clean")
     n_attack = n_total - n_clean
-    print(f"  Parsed: {n_total:,} ({n_clean:,} clean + {n_attack:,} attack), skipped: {skipped}")
+    print(f"Parsed: {n_total:,} ({n_clean:,} clean + {n_attack:,} attack), skipped: {skipped}")
 
     cat_counts = Counter()
     for lb in labels:
         if lb.startswith("attack:"):
             cat_counts[lb.split(":", 1)[1]] += 1
-    print(f"  Attack categories: {dict(cat_counts.most_common())}")
+    print(f"Attack categories: {dict(cat_counts.most_common())}")
 
     print("Scoring...")
     t0 = time.time()
@@ -89,8 +86,8 @@ def main() -> None:
         scores = detector.score(batch)
         all_scores.extend(scores)
         if (i // args.batch_size) % 5 == 0:
-            print(f"  {i + len(batch):,}/{n_total:,}", end="\r", flush=True)
-    print(f"  Scoring done in {time.time() - t0:.1f}s")
+            print(f"{i + len(batch):,}/{n_total:,}", end="\r", flush=True)
+    print(f"Scoring done in {time.time() - t0:.1f}s")
 
     scores_arr = np.array(all_scores)
     labels_binary = np.array([0 if lb == "clean" else 1 for lb in labels])
@@ -98,11 +95,11 @@ def main() -> None:
     print("\n=== SCORE DISTRIBUTION ===")
     clean_scores = scores_arr[labels_binary == 0]
     attack_scores = scores_arr[labels_binary == 1]
-    print(f"  Clean  scores: mean={clean_scores.mean():.4f} std={clean_scores.std():.4f} "
+    print(f"Clean  scores: mean={clean_scores.mean():.4f} std={clean_scores.std():.4f} "
           f"min={clean_scores.min():.4f} p50={np.median(clean_scores):.4f} "
           f"p95={np.quantile(clean_scores, 0.95):.4f} p99={np.quantile(clean_scores, 0.99):.4f} "
           f"max={clean_scores.max():.4f}")
-    print(f"  Attack scores: mean={attack_scores.mean():.4f} std={attack_scores.std():.4f} "
+    print(f"Attack scores: mean={attack_scores.mean():.4f} std={attack_scores.std():.4f} "
           f"min={attack_scores.min():.4f} p50={np.median(attack_scores):.4f} "
           f"p95={np.quantile(attack_scores, 0.95):.4f} p99={np.quantile(attack_scores, 0.99):.4f} "
           f"max={attack_scores.max():.4f}")
@@ -112,7 +109,7 @@ def main() -> None:
     _print_metrics(labels_binary, preds_train, labels, scores_arr, threshold)
 
     auc = roc_auc_score(labels_binary, scores_arr)
-    print(f"\n  ROC AUC: {auc:.4f}")
+    print(f"\nROC AUC: {auc:.4f}")
 
     print("\n=== THRESHOLD SWEEP ===")
     best_f1 = 0.0
@@ -135,19 +132,19 @@ def main() -> None:
             best_thr = thr
 
     # Print table for interesting thresholds
-    print(f"  {'Threshold':>9} {'Precision':>9} {'Recall':>9} {'F1':>9} {'FPR':>9} {'TP':>6} {'FP':>6} {'FN':>6} {'TN':>6}")
-    print(f"  {'-'*9} {'-'*9} {'-'*9} {'-'*9} {'-'*9} {'-'*6} {'-'*6} {'-'*6} {'-'*6}")
+    print(f"{'Threshold':>9} {'Precision':>9} {'Recall':>9} {'F1':>9} {'FPR':>9} {'TP':>6} {'FP':>6} {'FN':>6} {'TN':>6}")
+    print(f"{'-'*9} {'-'*9} {'-'*9} {'-'*9} {'-'*9} {'-'*6} {'-'*6} {'-'*6} {'-'*6}")
     for thr, prec, rec, f1, fpr, tp, fp, fn, tn in results:
         if thr % 0.05 < 0.005 or abs(thr - best_thr) < 0.005 or abs(thr - threshold) < 0.005:
             marker = " <-- BEST F1" if abs(thr - best_thr) < 0.005 else ""
             marker = " <-- TRAIN" if abs(thr - threshold) < 0.005 and not marker else marker
-            print(f"  {thr:9.2f} {prec:9.4f} {rec:9.4f} {f1:9.4f} {fpr:9.4f} {tp:6d} {fp:6d} {fn:6d} {tn:6d}{marker}")
+            print(f"{thr:9.2f} {prec:9.4f} {rec:9.4f} {f1:9.4f} {fpr:9.4f} {tp:6d} {fp:6d} {fn:6d} {tn:6d}{marker}")
 
     fpr_arr, tpr_arr, roc_thresholds = roc_curve(labels_binary, scores_arr)
     j_scores = tpr_arr - fpr_arr
     j_best_idx = np.argmax(j_scores)
     j_threshold = roc_thresholds[j_best_idx]
-    print(f"\n  Youden's J optimal threshold: {j_threshold:.4f} "
+    print(f"\nYouden's J optimal threshold: {j_threshold:.4f} "
           f"(TPR={tpr_arr[j_best_idx]:.4f}, FPR={fpr_arr[j_best_idx]:.4f}, J={j_scores[j_best_idx]:.4f})")
 
     print(f"\n=== METRICS AT BEST F1 THRESHOLD ({best_thr:.4f}) ===")
@@ -169,21 +166,20 @@ def main() -> None:
             if scores_arr[i] >= j_threshold:
                 cat_detected[cat]["detected_youden"] += 1
 
-    print(f"  {'Category':<20} {'Total':>6} {'Det@BestF1':>10} {'Recall%':>8} {'Det@Youden':>10} {'Recall%':>8}")
-    print(f"  {'-'*20} {'-'*6} {'-'*10} {'-'*8} {'-'*10} {'-'*8}")
+    print(f"{'Category':<20} {'Total':>6} {'Det@BestF1':>10} {'Recall%':>8} {'Det@Youden':>10} {'Recall%':>8}")
+    print(f"{'-'*20} {'-'*6} {'-'*10} {'-'*8} {'-'*10} {'-'*8}")
     for cat in sorted(cat_detected.keys()):
         d = cat_detected[cat]
         r_best = d["detected_best"] / d["total"] * 100 if d["total"] > 0 else 0
         r_youden = d["detected_youden"] / d["total"] * 100 if d["total"] > 0 else 0
-        print(f"  {cat:<20} {d['total']:>6} {d['detected_best']:>10} {r_best:>7.1f}% {d['detected_youden']:>10} {r_youden:>7.1f}%")
+        print(f"{cat:<20} {d['total']:>6} {d['detected_best']:>10} {r_best:>7.1f}% {d['detected_youden']:>10} {r_youden:>7.1f}%")
 
     print("\n=== SUMMARY ===")
-    print(f"  Dataset: {n_total:,} entries ({n_clean:,} clean + {n_attack:,} attack)")
-    print(f"  ROC AUC: {auc:.4f}")
-    print(f"  Training threshold: {threshold:.4f}")
-    print(f"  Best F1 threshold:  {best_thr:.4f} (F1={best_f1:.4f})")
-    print(f"  Youden threshold:   {j_threshold:.4f}")
-    print(f"  Recommendation: Use threshold = {best_thr:.4f} for balanced detection")
+    print(f"Dataset: {n_total:,} entries ({n_clean:,} clean + {n_attack:,} attack)")
+    print(f"ROC AUC: {auc:.4f}")
+    print(f"Training threshold: {threshold:.4f}")
+    print(f"Best F1 threshold:  {best_thr:.4f} (F1={best_f1:.4f})")
+    print(f"Youden threshold:   {j_threshold:.4f}")
 
 
 def _print_metrics(labels_binary, preds, labels_raw, scores_arr, threshold):
@@ -197,12 +193,12 @@ def _print_metrics(labels_binary, preds, labels_raw, scores_arr, threshold):
     fpr = fp / (fp + tn) if (fp + tn) > 0 else 0.0
     accuracy = (tp + tn) / (tp + fp + fn + tn)
 
-    print(f"  TP={tp:,}  FP={fp:,}  FN={fn:,}  TN={tn:,}")
-    print(f"  Precision: {precision:.4f}")
-    print(f"  Recall:    {recall:.4f}")
-    print(f"  F1:        {f1:.4f}")
-    print(f"  FPR:       {fpr:.4f}")
-    print(f"  Accuracy:  {accuracy:.4f}")
+    print(f"TP={tp:,}  FP={fp:,}  FN={fn:,}  TN={tn:,}")
+    print(f"Precision: {precision:.4f}")
+    print(f"Recall:    {recall:.4f}")
+    print(f"F1:        {f1:.4f}")
+    print(f"FPR:       {fpr:.4f}")
+    print(f"Accuracy:  {accuracy:.4f}")
 
 
 if __name__ == "__main__":

@@ -1,19 +1,19 @@
 from __future__ import annotations
 
 import json
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 
 import pytest
 
-from services.features import FeatureExtractor
-from services.mitre import classify
-from services.parsers import LogParser
-from services.training import train_model
 from core.models import LogEvent
 from detectors.baseline import FrequencyBaselineDetector
 from detectors.isolation_forest import IsolationForestDetector
 from detectors.registry import ModelRegistry
+from services.features import FeatureExtractor
+from services.mitre import classify
+from services.parsers import LogParser
 from services.storage import Storage
+from services.training import train_model
 
 
 def _generate_normal_events(count: int = 100) -> list[LogEvent]:
@@ -23,7 +23,7 @@ def _generate_normal_events(count: int = 100) -> list[LogEvent]:
     for i in range(count):
         events.append(
             LogEvent(
-                timestamp=datetime(2026, 3, 10, 10 + (i % 8), i % 60, 0, tzinfo=timezone.utc),
+                timestamp=datetime(2026, 3, 10, 10 + (i % 8), i % 60, 0, tzinfo=UTC),
                 host="api.example.com",
                 remote_addr=f"192.168.1.{i % 50 + 10}",
                 method="GET" if i % 3 != 0 else "POST",
@@ -41,7 +41,7 @@ def _generate_normal_events(count: int = 100) -> list[LogEvent]:
 
 
 def _generate_attack_events() -> list[LogEvent]:
-    base = datetime(2026, 3, 10, 3, 0, 0, tzinfo=timezone.utc)
+    base = datetime(2026, 3, 10, 3, 0, 0, tzinfo=UTC)
     return [
         LogEvent(
             timestamp=base,

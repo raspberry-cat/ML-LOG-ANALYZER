@@ -9,7 +9,7 @@ from urllib.request import Request, urlopen
 from core.settings import settings
 
 
-def main() -> None:
+def main():
     parser = argparse.ArgumentParser(description="Ingest logs via API")
     parser.add_argument("--input", type=Path, required=True)
     parser.add_argument("--url", default="http://localhost:8000/ingest")

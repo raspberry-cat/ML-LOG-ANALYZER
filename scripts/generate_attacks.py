@@ -93,7 +93,7 @@ def load_real_templates(val_path: Path, n: int = 100) -> list[dict]:
     templates = []
     with open(val_path, encoding="utf-8") as f:
         lines = []
-        for i, line in enumerate(f):
+        for _i, line in enumerate(f):
             line = line.strip()
             if line:
                 lines.append(line)
@@ -154,25 +154,22 @@ def generate_attacks(val_path: Path, count: int = 5000) -> list[dict]:
     return attacks
 
 
-def main() -> None:
+def main():
     val_path = Path("data/logs/nginx_val.jsonl")
     out_attacks = Path("data/logs/attacks_realistic.jsonl")
     out_val_mixed = Path("data/logs/nginx_val_mixed.jsonl")
 
-    print("Generating realistic attacks...")
     attacks = generate_attacks(val_path, count=5000)
-    print(f"  Generated {len(attacks)} attack entries")
+    print(f"{len(attacks)} attacks generated")
 
     cats = Counter(a["_attack_category"] for a in attacks)
     for cat, n in cats.most_common():
-        print(f"    {cat}: {n}")
+        print(f"  {cat}: {n}")
 
     with open(out_attacks, "w", encoding="utf-8") as f:
         for a in attacks:
             f.write(json.dumps(a, ensure_ascii=False) + "\n")
-    print(f"  Attacks saved to {out_attacks}")
-
-    print("Creating mixed validation set...")
+    print(f"saved to {out_attacks}")
     clean_lines = []
     with open(val_path, encoding="utf-8") as f:
         for i, line in enumerate(f):
@@ -191,8 +188,7 @@ def main() -> None:
     with open(out_val_mixed, "w", encoding="utf-8") as f:
         for line in mixed:
             f.write(line + "\n")
-    print(f"  Mixed set: {len(mixed)} entries ({len(clean_lines)} clean + {len(attacks)} attacks)")
-    print(f"  Saved to {out_val_mixed}")
+    print(f"mixed: {len(mixed)} ({len(clean_lines)} clean + {len(attacks)} attacks) -> {out_val_mixed}")
 
 
 if __name__ == "__main__":

@@ -9,12 +9,12 @@ import numpy as np
 from sklearn.ensemble import IsolationForest
 from sklearn.preprocessing import StandardScaler
 
-from services.features import FeatureExtractor
-from services.parsers import LogParser
 from core.models import LogEvent
+from core.settings import settings
 from detectors.isolation_forest import IsolationForestDetector
 from detectors.registry import ModelRegistry
-from core.settings import settings
+from services.features import FeatureExtractor
+from services.parsers import LogParser
 
 BATCH_SIZE = 50_000
 
@@ -64,7 +64,7 @@ def stream_features(
                 elapsed = time.time() - t0
                 rate = row / elapsed if elapsed > 0 else 0
                 print(
-                    f"\r  {row:,}/{total_lines:,} rows "
+                    f"\r{row:,}/{total_lines:,} rows "
                     f"({row * 100 / total_lines:.1f}%) "
                     f"{rate:,.0f} rows/s, skipped {skipped:,}",
                     end="",
@@ -80,7 +80,7 @@ def stream_features(
             matrix[row : row + n] = features.astype(np.float32)
             row += n
 
-    print(f"\n  Done: {row:,} rows, {skipped:,} skipped")
+    print(f"\nDone: {row:,} rows, {skipped:,} skipped")
     return matrix[:row]
 
 
@@ -98,7 +98,7 @@ def _parse_batch(lines: list[str], fmt: str, parser: LogParser) -> tuple[list[Lo
     return events, bad
 
 
-def main() -> None:
+def main():
     ap = argparse.ArgumentParser(description="Train on large log files (streaming)")
     ap.add_argument("--input", type=Path, required=True)
     ap.add_argument(
@@ -111,11 +111,11 @@ def main() -> None:
     ap.add_argument("--n-estimators", type=int, default=200)
     args = ap.parse_args()
 
-    print(f"Counting lines in {args.input} ...")
+    print(f"Counting lines in {args.input}")
     total = count_lines(args.input)
-    print(f"  {total:,} lines")
+    print(f"{total:,} lines")
 
-    print("Extracting features (streaming) ...")
+    print("Extracting features (streaming)")
     parser = LogParser(
         source_format=args.format,
         json_field_mapping=settings.log_field_mapping,
@@ -123,15 +123,15 @@ def main() -> None:
     )
     extractor = FeatureExtractor()
     matrix = stream_features(args.input, args.format, parser, extractor, total)
-    print(f"  Matrix shape: {matrix.shape}, dtype: {matrix.dtype}")
-    print(f"  Memory: {matrix.nbytes / 1024**3:.2f} GB")
+    print(f"Matrix shape: {matrix.shape}, dtype: {matrix.dtype}")
+    print(f"Memory: {matrix.nbytes / 1024**3:.2f} GB")
 
-    print("Fitting StandardScaler ...")
+    print("Fitting StandardScaler")
     scaler = StandardScaler()
     scaled = scaler.fit_transform(matrix)
 
     print(
-        f"Training IsolationForest ({args.n_estimators} trees, contamination={args.contamination}) ..."
+        f"Training IsolationForest ({args.n_estimators} trees, contamination={args.contamination})"
     )
     t0 = time.time()
     model = IsolationForest(
@@ -141,16 +141,16 @@ def main() -> None:
         n_jobs=-1,
     )
     model.fit(scaled)
-    print(f"  fit done in {time.time() - t0:.1f}s")
+    print(f"Fit done in {time.time() - t0:.1f}s")
 
-    print("Computing scores ...")
+    print("Computing scores")
     t0 = time.time()
     raw_scores = -model.decision_function(scaled)
     score_min = float(np.min(raw_scores))
     score_max = float(np.max(raw_scores))
     scores = (raw_scores - score_min) / (score_max - score_min)
     scores = np.clip(scores, 0.0, 1.0)
-    print(f"  done in {time.time() - t0:.1f}s")
+    print(f"Done in {time.time() - t0:.1f}s")
 
     quantile = 1.0 - args.contamination
     threshold = float(np.quantile(scores, quantile))

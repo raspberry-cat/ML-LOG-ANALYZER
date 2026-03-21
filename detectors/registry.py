@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 import json
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from pathlib import Path
 
 from detectors.base import IAnomalyDetector
@@ -22,14 +22,14 @@ class ModelRegistry:
         feature_extractor: FeatureExtractor,
         train_metrics: dict[str, float] | None = None,
     ) -> dict[str, object]:
-        version = datetime.now(timezone.utc).strftime("%Y%m%d%H%M%S")
+        version = datetime.now(UTC).strftime("%Y%m%d%H%M%S")
         model_dir = self.base_path / f"{model_type}_{version}"
         detector.save(str(model_dir))
 
         metadata = {
             "model_type": model_type,
             "version": version,
-            "trained_at": datetime.now(timezone.utc).isoformat(),
+            "trained_at": datetime.now(UTC).isoformat(),
             "feature_names": feature_extractor.feature_names,
             "train_metrics": train_metrics or {},
             "path": str(model_dir),

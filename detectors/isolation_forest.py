@@ -7,9 +7,9 @@ import numpy as np
 from sklearn.ensemble import IsolationForest
 from sklearn.preprocessing import StandardScaler
 
-from services.features import FeatureExtractor
-from detectors.base import IAnomalyDetector
 from core.models import AnomalyResult, LogEvent
+from detectors.base import IAnomalyDetector
+from services.features import FeatureExtractor
 
 
 class IsolationForestDetector(IAnomalyDetector):

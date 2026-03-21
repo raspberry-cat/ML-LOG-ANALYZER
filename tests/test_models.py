@@ -1,19 +1,19 @@
 from __future__ import annotations
 
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 
 import pytest
 
-from services.features import FeatureExtractor
 from core.models import LogEvent
 from detectors.baseline import FrequencyBaselineDetector
 from detectors.isolation_forest import IsolationForestDetector
+from services.features import FeatureExtractor
 
 
 def _make_events(count: int, path: str = "/index.html", status: int = 200) -> list[LogEvent]:
     return [
         LogEvent(
-            timestamp=datetime(2026, 3, 10, 10, i % 60, 0, tzinfo=timezone.utc),
+            timestamp=datetime(2026, 3, 10, 10, i % 60, 0, tzinfo=UTC),
             remote_addr=f"192.168.1.{i % 256}",
             method="GET",
             path=path,
@@ -161,7 +161,7 @@ class TestIsolationForestDetector:
         detector = IsolationForestDetector(feature_extractor=extractor, n_estimators=50)
         identical = [
             LogEvent(
-                timestamp=datetime(2026, 3, 10, 12, 0, 0, tzinfo=timezone.utc),
+                timestamp=datetime(2026, 3, 10, 12, 0, 0, tzinfo=UTC),
                 method="GET",
                 path="/",
                 status=200,

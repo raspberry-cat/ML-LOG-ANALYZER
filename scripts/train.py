@@ -4,14 +4,14 @@ from __future__ import annotations
 import argparse
 from pathlib import Path
 
+from core.settings import settings
+from detectors.registry import ModelRegistry
 from services.features import FeatureExtractor
 from services.parsers import LogParser
 from services.training import train_model
-from detectors.registry import ModelRegistry
-from core.settings import settings
 
 
-def main() -> None:
+def main():
     parser = argparse.ArgumentParser(description="Train anomaly detection model")
     parser.add_argument("--input", type=Path, required=True)
     parser.add_argument(

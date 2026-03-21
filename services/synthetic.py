@@ -3,7 +3,7 @@ from __future__ import annotations
 import json
 import random
 from collections.abc import Iterable
-from datetime import datetime, timedelta, timezone
+from datetime import UTC, datetime, timedelta
 
 from core.models import LogEvent
 
@@ -53,7 +53,7 @@ def generate_events(
     anomaly_ratio: float = 0.05,
     start_time: datetime | None = None,
 ) -> list[LogEvent]:
-    start_time = start_time or datetime.now(timezone.utc) - timedelta(minutes=total)
+    start_time = start_time or datetime.now(UTC) - timedelta(minutes=total)
     events: list[LogEvent] = []
     anomaly_count = int(total * anomaly_ratio)
     normal_count = total - anomaly_count
@@ -145,7 +145,6 @@ def _generate_anomaly_events(count: int, start_time: datetime) -> list[LogEvent]
         status = random.choice([401, 403, 404, 405, 500, 502, 504])
         bytes_sent = random.randint(50, 30000)
         request_time = random.uniform(1.2, 5.0)
-        referrer = "-"
         user_agent = random.choice(ANOMALY_UA)
         message = _build_message(method, path, "HTTP/1.1")
         events.append(

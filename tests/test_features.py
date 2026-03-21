@@ -1,13 +1,13 @@
 from __future__ import annotations
 
 import math
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 
 import numpy as np
 import pytest
 
-from services.features import FEATURE_NAMES, FeatureExtractor
 from core.models import LogEvent
+from services.features import FEATURE_NAMES, FeatureExtractor
 
 
 class TestFeatureExtractor:
@@ -47,7 +47,7 @@ class TestFeatureExtractor:
     def test_method_code_unknown(self):
         extractor = FeatureExtractor()
         event = LogEvent(
-            timestamp=datetime(2026, 3, 10, tzinfo=timezone.utc),
+            timestamp=datetime(2026, 3, 10, tzinfo=UTC),
             method="PROPFIND",
             path="/",
             status=405,
@@ -92,7 +92,7 @@ class TestFeatureExtractor:
     def test_sql_keyword_detection(self):
         extractor = FeatureExtractor()
         event = LogEvent(
-            timestamp=datetime(2026, 3, 10, 3, 0, 0, tzinfo=timezone.utc),
+            timestamp=datetime(2026, 3, 10, 3, 0, 0, tzinfo=UTC),
             remote_addr="10.0.0.2",
             method="GET",
             path="/search?q=union select * from users",
@@ -123,13 +123,13 @@ class TestFeatureExtractor:
     def test_weekend_flag(self):
         extractor = FeatureExtractor()
         saturday = LogEvent(
-            timestamp=datetime(2026, 3, 14, 12, 0, 0, tzinfo=timezone.utc),
+            timestamp=datetime(2026, 3, 14, 12, 0, 0, tzinfo=UTC),
             method="GET",
             path="/",
             status=200,
         )
         weekday = LogEvent(
-            timestamp=datetime(2026, 3, 10, 12, 0, 0, tzinfo=timezone.utc),
+            timestamp=datetime(2026, 3, 10, 12, 0, 0, tzinfo=UTC),
             method="GET",
             path="/",
             status=200,
@@ -148,7 +148,7 @@ class TestFeatureExtractor:
     def test_none_fields_produce_valid_features(self):
         extractor = FeatureExtractor()
         event = LogEvent(
-            timestamp=datetime(2026, 3, 10, tzinfo=timezone.utc),
+            timestamp=datetime(2026, 3, 10, tzinfo=UTC),
         )
         features = extractor.transform([event])
         assert features.shape == (1, 26)

@@ -7,7 +7,7 @@ from pathlib import Path
 from services.synthetic import generate_events, to_json_lines, to_plain_lines
 
 
-def main() -> None:
+def main():
     parser = argparse.ArgumentParser(description="Generate synthetic nginx access logs")
     parser.add_argument("--total", type=int, default=500)
     parser.add_argument("--anomaly-ratio", type=float, default=0.05)

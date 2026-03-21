@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 
 import pytest
 
@@ -10,7 +10,7 @@ from core.models import LogEvent
 @pytest.fixture()
 def sample_event() -> LogEvent:
     return LogEvent(
-        timestamp=datetime(2026, 3, 10, 14, 30, 0, tzinfo=timezone.utc),
+        timestamp=datetime(2026, 3, 10, 14, 30, 0, tzinfo=UTC),
         host="api.example.com",
         remote_addr="198.51.100.42",
         method="GET",
@@ -29,7 +29,7 @@ def sample_event() -> LogEvent:
 
 @pytest.fixture()
 def attack_events() -> list[LogEvent]:
-    base = datetime(2026, 3, 10, 3, 0, 0, tzinfo=timezone.utc)
+    base = datetime(2026, 3, 10, 3, 0, 0, tzinfo=UTC)
     return [
         LogEvent(
             timestamp=base,
@@ -81,7 +81,7 @@ def attack_events() -> list[LogEvent]:
 
 @pytest.fixture()
 def normal_events() -> list[LogEvent]:
-    base = datetime(2026, 3, 10, 10, 0, 0, tzinfo=timezone.utc)
+    base = datetime(2026, 3, 10, 10, 0, 0, tzinfo=UTC)
     return [
         LogEvent(
             timestamp=base,

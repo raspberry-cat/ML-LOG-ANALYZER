@@ -2,8 +2,7 @@ from __future__ import annotations
 
 import importlib
 import json
-import os
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 
 import pytest
 
@@ -26,14 +25,14 @@ def trained_app(tmp_path):
 
     importlib.reload(settings_mod)
 
+    from detectors.registry import ModelRegistry
     from services.features import FeatureExtractor
     from services.training import train_model
-    from detectors.registry import ModelRegistry
 
     registry = ModelRegistry(str(tmp_path / "artifacts"))
     events = [
         LogEvent(
-            timestamp=datetime(2026, 3, 10, 12, i, 0, tzinfo=timezone.utc),
+            timestamp=datetime(2026, 3, 10, 12, i, 0, tzinfo=UTC),
             method="GET",
             path="/index.html",
             status=200,
@@ -48,9 +47,9 @@ def trained_app(tmp_path):
     import api.main as api_mod
 
     importlib.reload(api_mod)
-    from api.main import app
-
     from fastapi.testclient import TestClient
+
+    from api.main import app
 
     with TestClient(app) as client:
         yield client
@@ -75,14 +74,14 @@ def trained_app_custom_mapping(tmp_path, monkeypatch):
 
     importlib.reload(settings_mod)
 
+    from detectors.registry import ModelRegistry
     from services.features import FeatureExtractor
     from services.training import train_model
-    from detectors.registry import ModelRegistry
 
     registry = ModelRegistry(str(tmp_path / "artifacts"))
     events = [
         LogEvent(
-            timestamp=datetime(2026, 3, 10, 12, i, 0, tzinfo=timezone.utc),
+            timestamp=datetime(2026, 3, 10, 12, i, 0, tzinfo=UTC),
             method="GET",
             path="/index.html",
             status=200,
@@ -97,9 +96,9 @@ def trained_app_custom_mapping(tmp_path, monkeypatch):
     import api.main as api_mod
 
     importlib.reload(api_mod)
-    from api.main import app
-
     from fastapi.testclient import TestClient
+
+    from api.main import app
 
     with TestClient(app) as client:
         yield client
@@ -145,14 +144,14 @@ def trained_app_with_startup_file_ingest(tmp_path, monkeypatch):
 
     importlib.reload(settings_mod)
 
+    from detectors.registry import ModelRegistry
     from services.features import FeatureExtractor
     from services.training import train_model
-    from detectors.registry import ModelRegistry
 
     registry = ModelRegistry(str(tmp_path / "artifacts"))
     events = [
         LogEvent(
-            timestamp=datetime(2026, 3, 10, 12, i, 0, tzinfo=timezone.utc),
+            timestamp=datetime(2026, 3, 10, 12, i, 0, tzinfo=UTC),
             method="GET",
             path="/index.html",
             status=200,
@@ -167,9 +166,9 @@ def trained_app_with_startup_file_ingest(tmp_path, monkeypatch):
     import api.main as api_mod
 
     importlib.reload(api_mod)
-    from api.main import app
-
     from fastapi.testclient import TestClient
+
+    from api.main import app
 
     with TestClient(app) as client:
         yield client

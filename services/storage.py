@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import threading
 from collections import deque
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 
 from core.models import AnomalyResult
 
@@ -18,7 +18,7 @@ class Storage:
         self._last_ingest: datetime | None = None
 
     def save_results(self, results: list[AnomalyResult]) -> None:
-        now = datetime.now(timezone.utc)
+        now = datetime.now(UTC)
         with self._lock:
             self._total_events += len(results)
             for r in results:

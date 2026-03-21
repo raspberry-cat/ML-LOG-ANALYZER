@@ -1,9 +1,9 @@
 from __future__ import annotations
 
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 
-from services.mitre import TECHNIQUE_CATALOG, classify
 from core.models import LogEvent
+from services.mitre import TECHNIQUE_CATALOG, classify
 
 
 def _event(
@@ -13,7 +13,7 @@ def _event(
     user_agent: str = "Mozilla/5.0",
 ) -> LogEvent:
     return LogEvent(
-        timestamp=datetime(2026, 3, 10, 12, 0, 0, tzinfo=timezone.utc),
+        timestamp=datetime(2026, 3, 10, 12, 0, 0, tzinfo=UTC),
         remote_addr="10.0.0.1",
         method=method,
         path=path,
@@ -232,9 +232,7 @@ class TestBotDetection:
 
     def test_scanner_ua_not_double_tagged(self):
         techniques = classify(_event(user_agent="sqlmap/1.6"))
-        ids = [t.technique_id for t in techniques]
-        count_t1595 = sum(1 for t in techniques if t.technique_id == "T1595")
-        assert count_t1595 == 0
+        assert not any(t.technique_id == "T1595" for t in techniques)
 
 
 class TestStatusBasedRules:
